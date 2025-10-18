@@ -120,3 +120,70 @@ div.hero h2 {
     flex: 1;
     max-width: 50%; /* keeps them balanced */
 }
+
+/* ===== Beautify ONLY the doughnut chart (myChart) ===== */
+#myChart {
+  /* layout */
+  max-width: 520px;
+  max-height: 520px;
+  width: min(100%, 520px);
+  height: auto;
+  aspect-ratio: 1 / 1;
+
+  /* visual polish */
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+  padding: 16px; /* creates a white frame around the chart */
+  border: 1px solid rgba(17,24,39,0.06);
+
+  /* motion */
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+#myChart:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 16px 36px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.06);
+}
+
+/* keep the surrounding charts area tidy without affecting d3 chart */
+.charts {
+  gap: 32px;
+}
+
+/* ===== Beautify D3 Chart (d3Chart) ===== */
+#d3Chart {
+  max-width: 520px;
+  max-height: 520px;
+  width: min(100%, 520px);
+  height: auto;
+  aspect-ratio: 1 / 1;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+  padding: 16px;
+  border: 1px solid rgba(17,24,39,0.06);
+  transition: transform .25s ease, box-shadow .25s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#d3Chart:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 16px 36px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.06);
+}
+
+#d3Chart svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+}
+
+#d3Chart text {
+  fill: #333;
+  font-family: "Poppins", Arial, sans-serif;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(255,255,255,0.6);
+}

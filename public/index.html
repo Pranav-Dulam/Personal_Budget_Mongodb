@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/reset.css">
     <link rel="stylesheet" href="/main.css">
 </head>
-<scri>
+<body>
 
     <div class="menu">
         <ul>
@@ -94,111 +94,105 @@
                     return colors;
                 }
    </script>
-   <script>
-        function getBudget() {
-            axios.get('/budget', { headers: {'Accept': 'application/json'}})
-            .then(function(res) {
-                console.log('Budget data loaded from JSON:', res.data);
-                const labels = [];
-                const data = [];
-                res.data.myBudget.forEach(item => {
-                    labels.push(item.title);
-                    data.push(1);
-                });
-                const ctx = document.getElementById("myChart").getContext("2d");
-                new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Budget',
-                            data: data,
-                            backgroundColor: generateColors(labels.length)
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    legend: {
-                        position: 'bottom'
-                    },
-                    tooltips: {
-                        enabled: true
-                    }
-                }
-            });
-        })
-            .catch(error => console.error('Error fetching budget data:', error));
-        }
-    // Fetch and render chart
-    </script>
     <script src="https://d3js.org/d3.v3.min.js"></script>
-    <script>
-        function renderD3Chart(budgetItems) {
-            var width = 300,
-                height = 300,
-                radius = Math.min(width, height) / 2;
-            var color = d3.scale.category20();
-            var svg = d3.select("#d3Chart").append("svg")
-                .attr("width", width)
-                .attr("height", height)
-                .append("g")
-                .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-            var arc = d3.svg.arc().outerRadius(radius - 10).innerRadius(0);
-            var pie = d3.layout.pie().sort(null).value(function(d){ return d.budget;});
-            var g = svg.selectAll(".arc")
-                .data(pie(budgetItems))
-                .enter().append("g")
-                .attr("class", "arc");
+<script>
+let doughnutChart = null;
 
-            g.append("path")
-                .attr("d", arc)
-                .style("fill", function(d) { return color(d.data.title); });
+function clearD3() {
+  const el = document.getElementById("d3Chart");
+  if (el) el.innerHTML = "";
+}
 
-            g.append("text")
-                .attr("transform", function(d) {return "translate(" + arc.centroid(d) + ")"; })
-                .attr("dy", ".35em")
-                .text(function(d) { return d.data.title; });
+function renderD3(budgetItems) {
+  clearD3();
+  var width = 300,
+      height = 300,
+      radius = Math.min(width, height) / 2;
+
+  var svg = d3.select("#d3Chart").append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .append("g")
+      .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+  // Donut arc (inner hole)
+  var arc = d3.svg.arc()
+      .outerRadius(radius - 10)
+      .innerRadius(0);
+
+  var pie = d3.layout.pie()
+      .sort(null)
+      .value(function(d){ return d.budget; });
+
+  var g = svg.selectAll(".arc")
+      .data(pie(budgetItems))
+      .enter().append("g")
+      .attr("class", "arc");
+
+  g.append("path")
+      .attr("d", arc)
+      .style("fill", function(d) { return d.data.color || "#999"; });
+
+  // Tilted labels just outside the donut
+  g.append("text")
+    .attr("transform", function(d) {
+      const angle = (d.startAngle + d.endAngle) / 2;
+      const labelRadius = radius - 30;
+      const x = Math.cos(angle - Math.PI / 2) * labelRadius;
+      const y = Math.sin(angle - Math.PI / 2) * labelRadius;
+      return "translate(" + x + "," + y + ") rotate(" + (angle * 180 / Math.PI - 90) + ")";
+    })
+    .attr("dy", ".35em")
+    .attr("text-anchor", "start")
+    .style("font-size", "12px")
+    .style("fill", "#333")
+    .text(function(d) { return d.data.title; });
+}
+
+async function getBudget() {
+  try {
+    const res = await axios.get('/budget', { headers: { 'Accept': 'application/json' }});
+    const budget = res.data.myBudget || [];
+    const labels = budget.map(i => i.title);
+    const values = budget.map(i => i.budget);
+    const colors = budget.map(i => i.color);
+
+    // --- Chart.js doughnut (left)
+    const canvas = document.getElementById("myChart");
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      if (doughnutChart) doughnutChart.destroy();
+      doughnutChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Budget',
+            data: values,
+            backgroundColor: colors && colors.every(Boolean) ? colors : (typeof generateColors === 'function' ? generateColors(labels.length) : undefined),
+            borderColor: '#fff',
+            borderWidth: 2,
+            hoverOffset: 12
+          }]
+        },
+        options: {
+          responsive: true,
+          legend: { position: 'bottom' },
+          animation: { animateRotate: true, animateScale: true }
         }
+      });
+    }
 
-        // Hook into existing getBudget to render D3 chart once data is loaded
-        const originalGetBudget = getBudget;
-        getBudget = function() {
-            axios.get('/budget', { headers: 
-                {'Accept': 'application/json'}})
-                .then(function(res) {
-                    console.log('Budget data loaded from JSON:', res.data);
-                    const labels = [];
-                    const data = [];
-                    res.data.myBudget.forEach(item => {
-                        labels.push(item.title);
-                        data.push(item.budget);
-                    });
-                    // Render Chart.js as before
-                    const ctx = document.getElementById("myChart").getContext("2d");
-                    new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: labels,
-                            datasets: [{
-                                label: 'Budget',
-                                data: data,
-                                backgroundColor: generateColors(labels.length)
-                            }]
-                        },
-                        options: { responsive: true,
-                            legend: { position: 'bottom' },
-                            tooltips: { enabled: true }
-                        }
-                    });
-                    // Render D3 chart
-                    renderD3Chart(res.data.myBudget);
-                })
-                .catch(error => console.error('Error fetching budget data:', error));
-        }
-    </script>
+    // --- D3 donut (right)
+    renderD3(budget);
+
+  } catch (error) {
+    console.error('Error fetching budget data:', error);
+  }
+}
+</script>
     <script>
-        // Initial call to fetch budget data and render charts
-        getBudget();
-    </script>
+document.addEventListener('DOMContentLoaded', getBudget);
+</script>
 </body>
 </html>
