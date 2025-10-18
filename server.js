@@ -1,6 +1,7 @@
-const fs = require('fs');
-const path = require('path');
-const express = require('express');
+const express = require("express");
+const path = require("path");
+const mongoose = require("mongoose");
+const cors = require("cors");
 const app = express();
 const port = 3000;
 
